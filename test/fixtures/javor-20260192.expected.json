@@ -1,0 +1,68 @@
+{
+  "_source": "Faktúra vystavená - 20260192.pdf",
+  "_system": "iDoklad",
+  "_verified": "PDF text layer + rendered page",
+  "_notes": [
+    "Supplier street is printed as bare '76' with no street name — a source oddity, carried through as-is.",
+    "Item table header is 'Počet m. j. | Cena za m.j. | DPH % | Bez DPH | DPH | Spolu' — the unit-price header is neutral, so unit_price_includes_vat is null.",
+    "No unit-of-measure values are printed in the item rows, so unit is null on every line.",
+    "Priced from round gross amounts: quantity × unit_price differs from line_net by a cent on lines 2 and 3. Both are copied as printed.",
+    "Not captured by the schema: late-payment interest notice, print footer, PAY-by-square QR."
+  ],
+  "invoice": {
+    "invoice_number": "20260192",
+    "invoice_date": "28.05.2026",
+    "due_date": "11.06.2026",
+    "supplier_name": "JAVOR spol. s r. o.",
+    "supplier_address": "76, 900 50 Kráľová pri Senci, Slovensko",
+    "supplier_ico": "31421202",
+    "supplier_dic": "2020362058",
+    "supplier_ic_dph": "SK2020362058",
+    "customer_name": "STANISLAV, s. r. o.",
+    "customer_address": "Krmešská 61/19, 900 50 Kráľová pri Senci, Slovensko",
+    "customer_ico": "44408137",
+    "customer_dic": "2022712142",
+    "customer_ic_dph": "SK2022712142",
+    "currency": "EUR",
+    "subtotal": 1130.08,
+    "tax_total": 259.92,
+    "total": 1390.0,
+    "payment_reference": "20260192",
+    "iban": "SK15 0200 0000 0018 1044 2112",
+    "items": [
+      {
+        "description": "DAF Demontaz+montaz+vyvazenie pneu+vyjazd",
+        "quantity": 1,
+        "unit": null,
+        "unit_price": 211.38,
+        "unit_price_includes_vat": null,
+        "tax_rate": 23,
+        "line_net": 211.38,
+        "line_vat": 48.62,
+        "line_gross": 260.0
+      },
+      {
+        "description": "Pneu 245/70R17,5 LEAO L202-T 143/141 J 18PR",
+        "quantity": 2,
+        "unit": null,
+        "unit_price": 150.41,
+        "unit_price_includes_vat": null,
+        "tax_rate": 23,
+        "line_net": 300.81,
+        "line_vat": 69.19,
+        "line_gross": 370.0
+      },
+      {
+        "description": "Pneu 245/70R17.5 LEAO L202-D 136/134 M 16PR",
+        "quantity": 4,
+        "unit": null,
+        "unit_price": 154.47,
+        "unit_price_includes_vat": null,
+        "tax_rate": 23,
+        "line_net": 617.89,
+        "line_vat": 142.11,
+        "line_gross": 760.0
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+faza1.md
+faza2.md
+faza3.md
+faza4.md
+
+# dependencies
+node_modules/
+package-lock.json
+
+# next.js build
+.next/
+out/
+
+# production build
+build/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# env files
+.env*
+
+# vercel
+.vercel/
+
+# misc
+.DS_Store
+*.log

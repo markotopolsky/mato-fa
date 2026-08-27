@@ -1,0 +1,55 @@
+{
+  "_source": "Faktúra_26201379.pdf",
+  "_system": "POHODA",
+  "_verified": "PDF text layer",
+  "_notes": [
+    "Item header is 'Označenie dodávky | Množstvo | J.cena | Cena | %DPH | DPH | EUR Celkom'. 'J.cena' is neutral wording, so unit_price_includes_vat is null even though the numbers show it is net (300 × 0.99 = 297.00).",
+    "Payment method is printed 'Príkazom' with the accent — a probe-mode run once returned 'Prikazom', which was a misread. The schema has no payment-method field, so it is not compared here.",
+    "Not captured by the schema: VAT recapitulation table (0/5/19/23 % rows, the first three printed as 0,00), issuer name, register entry, retention-of-title and penalty clause."
+  ],
+  "invoice": {
+    "invoice_number": "26201379",
+    "invoice_date": "14.08.2026",
+    "due_date": "28.08.2026",
+    "supplier_name": "PLASTIC SLOVAKIA, s.r.o.",
+    "supplier_address": "Mlynské Nivy 77, 821 05 Bratislava 2",
+    "supplier_ico": "35949317",
+    "supplier_dic": "2022041945",
+    "supplier_ic_dph": "SK2022041945",
+    "customer_name": "STANISLAV, s.r.o.",
+    "customer_address": "900 50 Kráľová pri Senci č. 61",
+    "customer_ico": "44408137",
+    "customer_dic": "2022712142",
+    "customer_ic_dph": "SK2022712142",
+    "currency": "EUR",
+    "subtotal": 429.6,
+    "tax_total": 98.81,
+    "total": 528.41,
+    "payment_reference": "26201379",
+    "iban": "SK36 1100 0000 0026 2980 3037",
+    "items": [
+      {
+        "description": "600.011:Rolky 5kg/200ks 20rol/kartón; 56krt/PAL, 3xEAN",
+        "quantity": 300,
+        "unit": "rol",
+        "unit_price": 0.99,
+        "unit_price_includes_vat": null,
+        "tax_rate": 23,
+        "line_net": 297.0,
+        "line_vat": 68.31,
+        "line_gross": 365.31
+      },
+      {
+        "description": "604.04:HDPE vrecká 20x30+3/8my 120blokx50ks/krt",
+        "quantity": 5,
+        "unit": "krt",
+        "unit_price": 26.52,
+        "unit_price_includes_vat": null,
+        "tax_rate": 23,
+        "line_net": 132.6,
+        "line_vat": 30.5,
+        "line_gross": 163.1
+      }
+    ]
+  }
+}

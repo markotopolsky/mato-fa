@@ -1,0 +1,48 @@
+{
+  "_source": "Sken_20260422.png",
+  "_system": "Helios Inuvio",
+  "_verified": "rendered image only — this is a SCAN with no text layer, so every value was read visually and is less certain than the other fixtures",
+  "_notes": [
+    "Reduced VAT rate of 19 % — the only fixture that is not 23 %.",
+    "Identifiers by printed label: 'IČ: 31404375' -> supplier_ico, 'DIČ: SK2020355029' -> supplier_dic. The value carries an SK prefix and looks like a VAT number, but the document labels it DIČ, so supplier_ic_dph is null.",
+    "Item header is 'Množstvo MJ | MJ/bal | poč. bal. | PC bez DPH pred zľavou | Zľava | JC bez DPH po zľave | % DPH | CC bez DPH po zľave' — states 'bez DPH', so unit_price_includes_vat is false. unit_price is the post-discount unit price (JC bez DPH po zľave).",
+    "No per-line tax or gross column, so line_vat and line_gross are null.",
+    "The document prints no variable symbol, so payment_reference is null. 'Doklad č. 210260059' is the document number, not a payment reference.",
+    "Customer name is printed with a period after STANISLAV; punctuation on a scan is the least reliable part of this fixture.",
+    "Not captured by the schema: delivery-note number, MJ/bal and poč. bal. columns, stamp and signature, issuer contact block."
+  ],
+  "invoice": {
+    "invoice_number": "210260059",
+    "invoice_date": "21.04.2026",
+    "due_date": "21.05.2026",
+    "supplier_name": "Alimpek, s.r.o.",
+    "supplier_address": "Žilinská 2277/0, 01861 Beluša",
+    "supplier_ico": "31404375",
+    "supplier_dic": "SK2020355029",
+    "supplier_ic_dph": null,
+    "customer_name": "STANISLAV. s r.o.",
+    "customer_address": "Kráľová pri Senci 61, 900 50 Kráľová pri Senci",
+    "customer_ico": "44408137",
+    "customer_dic": "2022712142",
+    "customer_ic_dph": "SK2022712142",
+    "currency": "EUR",
+    "subtotal": 290.0,
+    "tax_total": 55.1,
+    "total": 345.1,
+    "payment_reference": null,
+    "iban": "SK27 7500 0000 0040 0330 1595",
+    "items": [
+      {
+        "description": "ROBEMIX",
+        "quantity": 100,
+        "unit": "kg",
+        "unit_price": 2.9,
+        "unit_price_includes_vat": false,
+        "tax_rate": 19,
+        "line_net": 290.0,
+        "line_vat": null,
+        "line_gross": null
+      }
+    ]
+  }
+}

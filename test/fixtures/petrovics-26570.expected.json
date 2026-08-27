@@ -1,0 +1,47 @@
+{
+  "_source": "Faktura Stanislav dezinfekcia ruk 26570.pdf",
+  "_system": "MRP",
+  "_verified": "PDF text layer",
+  "_notes": [
+    "Invoiced in tax-inclusive prices: the document states 'Fakturujeme Vám v cenách s DPH' and the header is 'Cena MJ s DPH' / 'Celkom s DPH', so unit_price_includes_vat is true.",
+    "The item table has NO net column — line_net is null. The net amount 23.00 exists only in the VAT summary and must not be copied into the line.",
+    "quantity × unit_price = 28.30 but the printed line gross is 28.29; both are copied as printed.",
+    "The description cell holds two printed lines — a batch/expiry reference '001 - V213468  04.08.2026' above the product name — and both belong to the same row. The schema has no batch field, so dropping that line would lose document content with nowhere to put it; the description keeps the whole cell.",
+    "Payment method (Forma úhrady) is blank on the document.",
+    "Not captured by the schema: delivery-note number, tax-inclusive pricing notice, supplier contact block."
+  ],
+  "invoice": {
+    "invoice_number": "26570",
+    "invoice_date": "10.08.2026",
+    "due_date": "17.08.2026",
+    "supplier_name": "Jan Petrovics",
+    "supplier_address": "M C Sklodowskej č 25, 85104 Bratislava",
+    "supplier_ico": "34250557",
+    "supplier_dic": "1020216461",
+    "supplier_ic_dph": "SK1020216461",
+    "customer_name": "STANISLAV, s. r. o.",
+    "customer_address": "Krmešská 61/19, 900 50 Kráľová pri Senci",
+    "customer_ico": "44408137",
+    "customer_dic": "2022712142",
+    "customer_ic_dph": "SK2022712142",
+    "currency": "EUR",
+    "subtotal": 23.0,
+    "tax_total": 5.29,
+    "total": 28.29,
+    "payment_reference": "26570",
+    "iban": "SK88 1100 0000 0029 2986 6363",
+    "items": [
+      {
+        "description": "001 - V213468 04.08.2026 Sanitiz Alkoholova dezinfekcia 5L",
+        "quantity": 2,
+        "unit": null,
+        "unit_price": 14.15,
+        "unit_price_includes_vat": true,
+        "tax_rate": 23,
+        "line_net": null,
+        "line_vat": null,
+        "line_gross": 28.29
+      }
+    ]
+  }
+}
