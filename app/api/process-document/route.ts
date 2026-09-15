@@ -1,75 +1,64 @@
 import type { NextRequest } from "next/server";
 import {
   clampDpi,
-  PdfRenderError,
-  renderPdfToPngPages,
+  DocumentRenderError,
+  renderDocumentToImages,
   type RenderErrorKind,
-} from "@/app/lib/pdf-render";
+} from "@/app/lib/document-render";
 import {
-  extractInvoice,
-  QwenError,
-  QWEN_MODEL,
-  RAW_MODE,
-  type InvoiceExtraction,
-  type QwenErrorKind,
-  type QwenPageImage,
-  type QwenUsage,
-} from "@/app/lib/qwen";
-import { validateInvoice, type ValidationResult } from "@/app/lib/validate";
+  CLAUDE_MODEL,
+  ClaudeError,
+  extractDocument,
+  type ClaudeErrorKind,
+  type ClaudeUsage,
+  type DocumentExtraction,
+  type PageImage,
+} from "@/app/lib/claude";
 
-// MuPDF WASM + the Qwen request are both CPU / latency heavy; Node.js runtime.
+// MuPDF WASM + a multi-minute Claude request; Node.js runtime.
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-const MAX_BYTES = 50 * 1024 * 1024; // 50 MB upload ceiling (unchanged from Phase 1).
+const MAX_BYTES = 50 * 1024 * 1024; // 50 MB upload ceiling.
+
+/** Minimum gap between progress events while Claude is generating. */
+const PROGRESS_INTERVAL_MS = 1000;
 
 type PageMeta = { pageNumber: number; width: number; height: number; bytes: number };
 
 type WireEvent =
-  | { ev: "pdf-parsed"; pageCount: number; dpi: number }
+  | { ev: "document-parsed"; pageCount: number; dpi: number }
   | { ev: "page-rendering"; pageNumber: number; pageCount: number }
   | {
       ev: "page-rendered";
       pageNumber: number;
       width: number;
       height: number;
-      png: string; // base64
+      jpeg: string; // base64
     }
   | {
       ev: "render-done";
-      pdfPages: number;
-      pngPages: number;
-      totalPngBytes: number;
+      pageCount: number;
+      totalImageBytes: number;
       renderMs: number;
       pages: PageMeta[];
     }
+  | { ev: "claude-request"; model: string; pageCount: number }
+  | { ev: "claude-progress"; chars: number }
   | {
-      ev: "qwen-request";
+      ev: "claude-done";
+      document: DocumentExtraction;
       model: string;
-      pageCount: number;
-      /**
-       * True when QWEN_RAW=1 stripped `response_format` / `json_schema` from the
-       * request. The extracted JSON is then whatever shape the model chose, so
-       * the client must say so instead of presenting it as schema-conforming.
-       */
-      rawMode: boolean;
-    }
-  | {
-      ev: "qwen-done";
-      invoice: InvoiceExtraction;
-      model: string;
-      usage: QwenUsage;
-      finishReason: string | null;
+      usage: ClaudeUsage;
+      stopReason: string | null;
       rawContent: string;
-      qwenMs: number;
+      claudeMs: number;
       totalMs: number;
-      /** Deterministic checks over the extraction; never alters it. */
-      validation: ValidationResult;
     }
   | {
       ev: "error";
-      stage: "render" | "qwen";
-      kind: RenderErrorKind | QwenErrorKind | "unexpected";
+      stage: "render" | "claude";
+      kind: RenderErrorKind | ClaudeErrorKind | "unexpected";
       page?: number;
       message: string;
     };
@@ -110,29 +99,35 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   const dpi = clampDpi(new URL(request.url).searchParams.get("dpi"));
   const data = new Uint8Array(await file.arrayBuffer());
-  // The uploaded PDF lives only in this buffer; it is never written to disk.
+  // The uploaded document lives only in this buffer; it is never written to disk.
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (event: WireEvent) => {
-        controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+        try {
+          controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+        } catch {
+          // The client disconnected and the stream is closed; nothing to tell.
+        }
       };
 
       const startedAt = performance.now();
 
-      // ---- Stage 1: PDF -> PNG (reuses the Phase 1 renderer verbatim) --------
-      const images: QwenPageImage[] = [];
+      // ---- Stage 1: document -> JPEG pages --------------------------------
+      const images: PageImage[] = [];
       const pageMetas: PageMeta[] = [];
-      let pdfPages = 0;
-      let totalPngBytes = 0;
+      let totalImageBytes = 0;
 
       try {
         const renderStart = performance.now();
-        for await (const event of renderPdfToPngPages(data, { dpi })) {
-          if (event.type === "pdf-parsed") {
-            pdfPages = event.pageCount;
-            send({ ev: "pdf-parsed", pageCount: event.pageCount, dpi });
+        for await (const event of renderDocumentToImages(data, {
+          fileName: file.name,
+          mimeType: file.type,
+          dpi,
+        })) {
+          if (event.type === "document-parsed") {
+            send({ ev: "document-parsed", pageCount: event.pageCount, dpi });
           } else if (event.type === "page-rendering") {
             send({
               ev: "page-rendering",
@@ -140,29 +135,25 @@ export async function POST(request: NextRequest): Promise<Response> {
               pageCount: event.pageCount,
             });
           } else {
-            const { pageNumber, width, height, png } = event.page;
-            const b64 = Buffer.from(png).toString("base64");
-            totalPngBytes += png.length;
-            pageMetas.push({ pageNumber, width, height, bytes: png.length });
-            images.push({
-              pageNumber,
-              dataUrl: `data:image/png;base64,${b64}`,
-            });
-            send({ ev: "page-rendered", pageNumber, width, height, png: b64 });
+            const { pageNumber, width, height, jpeg } = event.page;
+            const b64 = Buffer.from(jpeg).toString("base64");
+            totalImageBytes += jpeg.length;
+            pageMetas.push({ pageNumber, width, height, bytes: jpeg.length });
+            images.push({ pageNumber, base64: b64 });
+            send({ ev: "page-rendered", pageNumber, width, height, jpeg: b64 });
           }
         }
 
         send({
           ev: "render-done",
-          pdfPages,
-          pngPages: images.length,
-          totalPngBytes,
+          pageCount: images.length,
+          totalImageBytes,
           renderMs: Math.round(performance.now() - renderStart),
           pages: pageMetas,
         });
       } catch (err) {
-        console.error("[api/process-invoice] render failed:", err);
-        if (err instanceof PdfRenderError) {
+        console.error("[api/process-document] render failed:", err);
+        if (err instanceof DocumentRenderError) {
           send({
             ev: "error",
             stage: "render",
@@ -184,44 +175,42 @@ export async function POST(request: NextRequest): Promise<Response> {
         return;
       }
 
-      // ---- Stage 2: PNG pages -> Qwen3.8 Max -> structured JSON --------------
-      send({
-        ev: "qwen-request",
-        model: QWEN_MODEL,
-        pageCount: images.length,
-        rawMode: RAW_MODE,
-      });
+      // ---- Stage 2: pages -> Claude -> structured JSON ---------------------
+      send({ ev: "claude-request", model: CLAUDE_MODEL, pageCount: images.length });
 
+      let lastProgressAt = 0;
       try {
-        const result = await extractInvoice(images);
+        const result = await extractDocument(images, {
+          // Client disconnect cancels the (billed) generation.
+          signal: request.signal,
+          onProgress: (chars) => {
+            const now = performance.now();
+            if (now - lastProgressAt < PROGRESS_INTERVAL_MS) return;
+            lastProgressAt = now;
+            send({ ev: "claude-progress", chars });
+          },
+        });
         send({
-          ev: "qwen-done",
-          invoice: result.invoice,
+          ev: "claude-done",
+          document: result.document,
           model: result.model,
           usage: result.usage,
-          finishReason: result.finishReason,
+          stopReason: result.stopReason,
           rawContent: result.rawContent,
-          qwenMs: result.qwenMs,
+          claudeMs: result.claudeMs,
           totalMs: Math.round(performance.now() - startedAt),
-          // Runs on the extraction as returned; `result.invoice` is untouched.
-          validation: validateInvoice(result.invoice),
         });
       } catch (err) {
-        // QwenError messages never carry the API key; safe to log the object.
-        console.error("[api/process-invoice] qwen failed:", err);
-        if (err instanceof QwenError) {
-          send({
-            ev: "error",
-            stage: "qwen",
-            kind: err.kind,
-            message: err.message,
-          });
+        // ClaudeError messages never carry the API key; safe to log the object.
+        console.error("[api/process-document] claude failed:", err);
+        if (err instanceof ClaudeError) {
+          send({ ev: "error", stage: "claude", kind: err.kind, message: err.message });
         } else {
           send({
             ev: "error",
-            stage: "qwen",
+            stage: "claude",
             kind: "unexpected",
-            message: `Unexpected Qwen error: ${
+            message: `Unexpected Claude error: ${
               err instanceof Error ? err.message : String(err)
             }`,
           });
