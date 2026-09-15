@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { AUTH_COOKIE, isValidSession } from "@/app/lib/auth";
 import {
   clampDpi,
   DocumentRenderError,
@@ -71,6 +72,11 @@ function jsonError(status: number, kind: string, message: string): Response {
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
+  // proxy.ts already gates this route; re-checked here because every call is billed.
+  if (!isValidSession(request.cookies.get(AUTH_COOKIE)?.value)) {
+    return jsonError(401, "unauthorized", "Not logged in.");
+  }
+
   let form: FormData;
   try {
     form = await request.formData();
