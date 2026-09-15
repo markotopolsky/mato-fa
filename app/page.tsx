@@ -113,11 +113,12 @@ const RENDER_ERROR_LABEL: Record<string, string> = {
 };
 
 const CLAUDE_ERROR_LABEL: Record<string, string> = {
-  "missing-api-key": "Server misconfiguration — ANTHROPIC_API_KEY is not set",
-  auth: "Anthropic authentication failed",
+  "missing-api-key": "Server misconfiguration — OPENROUTER_API_KEY is not set",
+  auth: "OpenRouter authentication failed",
+  "insufficient-credit": "Not enough OpenRouter credit",
   "rate-limit": "Rate limited",
   "request-too-large": "Request too large",
-  "api-error": "Anthropic API error",
+  "api-error": "OpenRouter API error",
   network: "Network error",
   timeout: "Claude request timed out",
   refusal: "Model declined the document",
